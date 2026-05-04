@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/kill_matlab.cmake">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/kill_matlab.cmake" />
+              <option name="originalContent" value="# Script to close MATLAB processes to release MEX file locks&#10;# This is called before building MEX files&#10;&#10;if(WIN32)&#10;    # Try to close MATLAB gracefully using taskkill&#10;    message(STATUS &quot;Attempting to close MATLAB processes...&quot;)&#10;&#10;    # Kill MATLAB silently (do not fail if MATLAB is not running)&#10;    execute_process(&#10;        COMMAND taskkill /IM MATLAB.exe /F /T&#10;        OUTPUT_QUIET&#10;        ERROR_QUIET&#10;    )&#10;&#10;    # Wait a moment for the process to fully close&#10;    execute_process(COMMAND ${CMAKE_COMMAND} -E sleep 1)&#10;&#10;    message(STATUS &quot;MATLAB processes closed (if any were running)&quot;)&#10;endif()&#10;&#10;" />
+              <option name="updatedContent" value="# Script to close MATLAB processes to release MEX file locks&#10;# This is called before building MEX files&#10;&#10;if(WIN32)&#10;    message(STATUS &quot;========== MATLAB Shutdown Sequence ==========&quot;)&#10;    message(STATUS &quot;Closing Simulink model windows...&quot;)&#10;    &#10;    # Close any running Simulink models gracefully using matlabroot command&#10;    # First, try sending Ctrl+C to MATLAB windows to gracefully close them&#10;    execute_process(&#10;        COMMAND tasklist /FI &quot;IMAGENAME eq MATLAB.exe&quot; /FO CSV /NH&#10;        OUTPUT_VARIABLE MATLAB_RUNNING&#10;        OUTPUT_QUIET&#10;        ERROR_QUIET&#10;    )&#10;    &#10;    message(STATUS &quot;Force killing MATLAB and Simulink processes...&quot;)&#10;    &#10;    # Kill ALL MATLAB-related processes with force&#10;    execute_process(COMMAND taskkill /IM MATLAB.exe /F /T OUTPUT_QUIET ERROR_QUIET)&#10;    execute_process(COMMAND taskkill /IM simulink.exe /F OUTPUT_QUIET ERROR_QUIET)&#10;    execute_process(COMMAND taskkill /IM matlabstarter.exe /F OUTPUT_QUIET ERROR_QUIET)&#10;    &#10;    # Wait for processes to fully terminate&#10;    message(STATUS &quot;Waiting for processes to fully terminate (3 seconds)...&quot;)&#10;    execute_process(COMMAND ${CMAKE_COMMAND} -E sleep 3)&#10;    &#10;    # Additional aggressive kill attempts&#10;    execute_process(COMMAND taskkill /IM MATLAB.exe /F OUTPUT_QUIET ERROR_QUIET)&#10;    execute_process(COMMAND taskkill /IM simulink.exe /F OUTPUT_QUIET ERROR_QUIET)&#10;    &#10;    execute_process(COMMAND ${CMAKE_COMMAND} -E sleep 1)&#10;    &#10;    message(STATUS &quot;MATLAB processes terminated successfully&quot;)&#10;    message(STATUS &quot;=============================================&quot;)&#10;endif()&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
