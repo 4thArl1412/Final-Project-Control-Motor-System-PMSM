@@ -35,7 +35,7 @@ static void mdlOutputs(SimStruct *S, int_T tid) {
     Va = U(2);
     Vb = U(3);
     Vc = U(4);
-    carrier = Fs * fmod(t, 1/Fs);
+    carrier = 1.15 * (Fs * fmod(t, 1/Fs));
 
     //setting the vmax and vmin for offset
     Vmax = Va;

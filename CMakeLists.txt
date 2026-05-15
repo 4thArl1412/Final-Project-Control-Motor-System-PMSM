@@ -25,11 +25,13 @@ include_directories("C:/Program Files/MATLAB/R2024a/extern/include")
 set(MEX_SOURCE_FILES
     "IPMSM.c"
     "SVPWM.c"
+    "RFOC.c"
 )
 
 set(MEX_NAMES
     "IPMSM"
     "SVPWM"
+    "RFOC"
 )
 
 # Loop to build multiple MEX files
