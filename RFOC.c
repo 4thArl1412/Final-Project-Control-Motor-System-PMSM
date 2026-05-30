@@ -37,24 +37,10 @@ static void mdlOutputs(SimStruct *S, int_T tid){
     real_T *Y = ssGetOutputPortRealSignal(S,0);
     real_T *X = ssGetRealDiscStates(S);
 
-    real_T Valph, Vbeta, Va, Vb, Vc, theta_m, theta_e, Np;
 
-    //initialize variable
-    Np = 4;
-    theta_e = Np * X[6];
-
-    //voltage d-q axis into alpha beta
-    Valph = X[4] * cos(theta_e) - X[5] * sin(theta_e);
-    Vbeta = X[4] * sin(theta_e) + X[5] * cos(theta_e);
-
-    //voltage alpha beta to abc
-    Va = sqrt(2.0/3.0) * Valph;
-    Vb = sqrt(2.0 / 3.0) * (-0.5 *Valph + sqrt (3.0/4) * Vbeta);
-    Vc = sqrt (2.0/3.0) * (-0.5 * Valph - sqrt(3.0/4) * Vbeta);
-
-    Y[0] = Va;
-    Y[1] = Vb;
-    Y[2] = Vc;
+    Y[0] = X[2];
+    Y[1] = X[3];
+    Y[2] = X[4];
 
 }
 
@@ -64,9 +50,11 @@ static void mdlUpdate(SimStruct *S, int_T tid) {
     InputRealPtrsType uPtrs = ssGetInputPortRealSignalPtrs(S,0);
 
     real_T KpId, KiId, KpIq, KiIq,  errorId, errorIq, integral_old_Id, integral_old_Iq, integrator_Id, integrator_Iq, outputVd, outputVq;
-    real_T wm, theta_m, Ld, Lq, Rs, refId, actualId, refIq, actualIq, Ts, L, Tid, Tiq, errorId_old, errorIq_old, Np;
+    real_T wm, theta_m, Ld, Lq, Rs, refId, actualId, refIq, actualIq, Tid, Tiq, Np;
     real_T phi_f, Vmax;
+    real_T Valph, Vbeta, Va, Vb, Vc, theta_e, wc, alpha_filter, actualId_filtered, actualIq_filtered;
     real_T dt = 1e-4;
+    real_T prevId_filt, prevIq_filt;
 
     //initalize input and state
     refId = U(0);
@@ -75,10 +63,10 @@ static void mdlUpdate(SimStruct *S, int_T tid) {
     actualIq = U(3);
     wm = U(4);
     theta_m = U(5);
-    errorId_old = X[0];
-    errorIq_old = X[1];
-    integral_old_Id = X[2];
-    integral_old_Iq = X[3];
+    integral_old_Id = X[0];
+    integral_old_Iq = X[1];
+    prevId_filt = X[5];
+    prevIq_filt = X[6];
 
     //initialize contant value
     Np = 4;
@@ -86,21 +74,36 @@ static void mdlUpdate(SimStruct *S, int_T tid) {
     Rs = 0.025;
     Ld = 0.0002;
     Lq = 0.0004;
-    Vmax = 283;
-    Ts = 0.001; //Time Sampling
-    L = 0.5 * Ts;
-    Tid = (L/0.3);
-    Tiq = (L/0.3);
+    Vmax = 99.7;
+    wc = 250.0;
+    alpha_filter = 0.05;
+    Tid = Ld/Rs;
+    Tiq = Lq/Rs;
+    theta_e = Np * theta_m;
 
     //set gain propotional and integrator for each current
-    KpId = Ld/Tid;
-    KpIq = Lq/Tiq;
-    KiId = Rs/Tid;
-    KiIq = Rs/Tiq;
+    KpId = Ld * wc;
+    KpIq = Lq * wc;
+    KiId = Rs* wc;
+    KiIq = Rs* wc;
+
+
+    //PI by the paper reference
+    /*
+    KpId = 40;
+    KiId = 60;
+    KpIq = 20;
+    KiIq = 60;
+    */
+
+    //set low pass filter to reduce noise
+    actualId_filtered = (alpha_filter * actualId) + (1.0 - alpha_filter) * prevId_filt;
+    actualIq_filtered = (alpha_filter * actualIq) + (1.0 - alpha_filter) * prevIq_filt;
+
 
     //set error for each kp and ki
-    errorId = refId - actualId;
-    errorIq = refIq - actualIq;
+    errorId = refId - actualId_filtered;
+    errorIq = refIq - actualIq_filtered;
     integrator_Id = integral_old_Id + KiId * dt * errorId;
     integrator_Iq = integral_old_Iq + KiIq * dt * errorIq;
 
@@ -120,14 +123,24 @@ static void mdlUpdate(SimStruct *S, int_T tid) {
     if (outputVq > Vmax) outputVq = Vmax;
     if (outputVq < -Vmax) outputVq = -Vmax;
 
+
+    //voltage d-q axis into alpha beta
+    Valph = outputVd * cos(theta_e) - outputVq * sin(theta_e);
+    Vbeta = outputVd * sin(theta_e) + outputVq * cos(theta_e);
+
+    //voltage alpha beta to abc
+    Va = sqrt(2.0/3.0) * Valph;
+    Vb = sqrt(2.0 / 3.0) * (-0.5 *Valph + sqrt (3.0/4.0) * Vbeta);
+    Vc = sqrt (2.0/3.0) * (-0.5 * Valph - sqrt(3.0/4.0) * Vbeta);
+
     //set update state
-    X[0] = errorId;
-    X[1] = errorIq;
-    X[2] = integrator_Id;
-    X[3] = integrator_Iq;
-    X[4] = outputVd;
-    X[5] = outputVq;
-    X[6] = theta_m;
+    X[0] = integrator_Id;
+    X[1] = integrator_Iq;
+    X[2] = Va;
+    X[3] = Vb;
+    X[4] = Vc;
+    X[5] = actualId_filtered;
+    X[6] = actualIq_filtered;
 
 
 
