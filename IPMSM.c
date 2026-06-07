@@ -75,7 +75,7 @@ static void mdlOutputs(SimStruct *S, int_T tid) {
   Y[3] = X[0];
   Y[4] = X[1];
   Y[5] = Te;
-  Y[6] = X[2];
+  Y[6] = X[2] * (60/(2 * 3.14));
   Y[7] = X[3];
                                                                                                               
    }                                                                                    

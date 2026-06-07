@@ -4,10 +4,15 @@ project(Final_Project C)
 set(CMAKE_C_STANDARD 23)
 
 find_package(Matlab REQUIRED COMPONENTS MEX_COMPILER)
+find_package(Eigen3 REQUIRED)
 
 # Define the specific output folder for MEX files
 set(MEX_OUTPUT_DIR "${CMAKE_SOURCE_DIR}")
 file(MAKE_DIRECTORY ${MEX_OUTPUT_DIR})
+
+add_executable(Final_Project Speed_CTRL.cpp)
+target_link_libraries(Final_Project Eigen3::Eigen)
+target_include_directories(Final_Project PRIVATE "D:/Download/Clion/lib/eigen-5.0.0/Eigen")
 
 # Add a global PRE_BUILD command to kill MATLAB processes (to release MEX file locks)
 add_custom_target(kill_matlab_before_build ALL
@@ -32,6 +37,7 @@ set(MEX_NAMES
     "IPMSM"
     "SVPWM"
     "RFOC"
+        "MTPA_RNN"
 )
 
 # Loop to build multiple MEX files

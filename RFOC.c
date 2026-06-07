@@ -61,7 +61,7 @@ static void mdlUpdate(SimStruct *S, int_T tid) {
     refIq = U(1);
     actualId = U(2);
     actualIq = U(3);
-    wm = U(4);
+    wm = U(4) * ((2 * 3.14) / 60.0);
     theta_m = U(5);
     integral_old_Id = X[0];
     integral_old_Iq = X[1];
